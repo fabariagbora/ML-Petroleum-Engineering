@@ -1,0 +1,79 @@
+# import libraries
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVR
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+from scipy.stats import pearsonr
+
+# Load data from CSV file
+data = pd.read_csv('SVM_Production_Model.csv')  # CSV file path
+
+# Check the first few rows of the data to ensure it's loaded correctly
+print(data.head())
+
+# Define features (the six supporting variables) and the target variable
+X = data[['FTHP', 'Choke Size', 'Gas Rate', 'Gas Cumm', 'Gas Gravity', 'Bottom hole Temperature']]  # Features
+y = data['Bottom hole Pressure']  # Target variable
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Define the model using SVM with chosen parameters
+svm_model = SVR(kernel='rbf', C=1.0, epsilon=0.1)
+
+# Train the model
+svm_model.fit(X_train, y_train)
+
+# Predict values using the test set
+y_pred = svm_model.predict(X_test)
+
+# Calculate RMSE
+rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+
+# Calculate MAE
+mae = mean_absolute_error(y_test, y_pred)
+
+# Calculate Correlation Coefficient
+corr_coefficient, _ = pearsonr(y_test, y_pred)
+
+# Print the evaluation metrics
+print(f"RMSE: {rmse}")
+print(f"MAE: {mae}")
+print(f"Correlation Coefficient: {corr_coefficient}")
+
+
+# Save the predicted values along with actual values to another CSV file
+predictions_df = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred})
+predictions_df.to_csv('predictions_SVM_BHP.csv', index=False)
+
+# Plot 1: Predicted vs Actual with Regression Line
+plt.figure(figsize=(8, 6))
+sns.regplot(x=y_test, y=y_pred, line_kws={"color":"red"})
+plt.title('Predicted vs Actual with Regression Line')
+plt.xlabel('Observed Values (Actual)')
+plt.ylabel('Predicted Values')
+plt.grid(True)
+plt.show()
+
+# Plot 2: Residuals Plot (Actual - Predicted)
+residuals = y_test - y_pred
+plt.figure(figsize=(8, 6))
+plt.scatter(y_pred, residuals, color='purple')
+plt.axhline(y=0, color='red', linestyle='--')
+plt.title('Residuals Plot (Predicted vs Residuals)')
+plt.xlabel('Predicted Values')
+plt.ylabel('Residuals (Errors)')
+plt.grid(True)
+plt.show()
+
+# Plot 3: Distribution of Errors (Residuals)
+plt.figure(figsize=(8, 6))
+sns.histplot(residuals, kde=True, color='green')
+plt.title('Distribution of Residuals')
+plt.xlabel('Residuals (Errors)')
+plt.ylabel('Frequency')
+plt.grid(True)
+plt.show()
