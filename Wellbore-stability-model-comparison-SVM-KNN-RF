@@ -95,7 +95,7 @@ def evaluate_model(model, X_train, X_test, y_train, y_test, model_name):
     plt.grid(True)
     plt.show()
     
-    # Plot 3: Distribution of Errors (Residuals)
+    # Plot 3 Distribution of Errors (Residuals)
     plt.figure(figsize=(8, 6))
     sns.histplot(residuals, kde=True, color='green')
     plt.title(f'Distribution of Residuals ({model_name})')
