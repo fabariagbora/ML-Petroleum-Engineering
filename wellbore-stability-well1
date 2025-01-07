@@ -1,0 +1,81 @@
+# Import necessary libraries
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.linear_model import LinearRegression
+from scipy.stats import pearsonr, probplot
+
+# Step 1: Load your CSV data
+df = pd.read_csv('Kenneth_WellStability/WellboreStability__Log_Input_Well1_Analysis.csv')
+
+# Step 2: Separate the input features and the target (WER)
+X = df[['Depth', 'GR', 'PE', 'DT24QI', 'CNCF', 'ZDNC']].values  # 6 input features
+y = df['WER'].values  # Target variable (WER)
+
+# Step 3: Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Step 4: Normalize the data (standardization)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Step 5: Define the MLR model
+model = LinearRegression()
+
+# Step 6: Train the MLR model
+model.fit(X_train, y_train)
+
+# Step 7: Make predictions on test data
+y_pred = model.predict(X_test)
+
+# Step 8: Compute RMSE, MAE, and correlation coefficient
+rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+mae = mean_absolute_error(y_test, y_pred) 
+corr_coef, _ = pearsonr(y_test, y_pred)
+
+print(f'Root Mean Squared Error (RMSE): {rmse}')
+print(f'Mean Absolute Error (MAE): {mae}')
+print(f'Correlation Coefficient: {corr_coef}')
+
+# Step 9: Output actual and predicted values to a CSV file
+output_df = pd.DataFrame({
+    'Actual WER': y_test,
+    'Predicted WER': y_pred
+})
+
+# Save the DataFrame to a CSV file
+output_df.to_csv('actual_vs_predicted_WER_MLR.csv', index=False)
+print("Actual and Predicted values saved to 'actual_vs_predicted_WER_MLR.csv'.")
+
+# Step 10: Plotting
+
+# 1. Residual Plot
+residuals = y_test - y_pred
+plt.figure(figsize=(8, 6))
+sns.scatterplot(x=y_pred, y=residuals)
+plt.axhline(0, color='red', linestyle='--')
+plt.title('Residual Plot Well 1 (MLR)')
+plt.xlabel('Predicted WER')
+plt.ylabel('Residuals')
+plt.show()
+
+# 2. Predicted vs Actual with Regression Line
+plt.figure(figsize=(8, 6))
+sns.regplot(x=y_test, y=y_pred, line_kws={"color": "red"})
+plt.title('Predicted vs Actual WER with Regression Line Well 1 (MLR)')
+plt.xlabel('Actual WER')
+plt.ylabel('Predicted WER')
+plt.show()
+
+# 3. Distribution of Residuals using Histogram
+plt.figure(figsize=(8, 6))
+sns.histplot(residuals, kde=True)
+plt.title('Histogram of Residuals Well 1 (MLR)')
+plt.xlabel('Residuals')
+plt.ylabel('Frequency')
+plt.show()
